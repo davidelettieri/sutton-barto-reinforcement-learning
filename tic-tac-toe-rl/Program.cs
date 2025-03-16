@@ -5,7 +5,7 @@ var humanGame = new State(new PlayerSymbol?[3, 3]);
 IPlayer toMove = playerX;
 do
 {
-    var move = toMove.GetMove(humanGame);
+    var move = toMove.GetBestMove(humanGame);
     humanGame = humanGame.WithMove(toMove.Symbol, move);
     humanGame.PrintBoard();
     toMove = toMove.Symbol == playerX.Symbol ? humanPlayer : playerX;
@@ -185,7 +185,7 @@ enum PlayerSymbol
 internal interface IPlayer
 {
     PlayerSymbol Symbol { get; }
-    (int i, int j) GetMove(State state);
+    (int i, int j) GetBestMove(State state);
 }
 
 class QPlayer : IPlayer
@@ -231,10 +231,10 @@ class QPlayer : IPlayer
             return move;
         }
 
-        return GetMove(state);
+        return GetBestMove(state);
     }
 
-    public (int i, int j) GetMove(State state)
+    public (int i, int j) GetBestMove(State state)
     {
         (int i, int j)? bestMove = null;
         double maxValue = double.MinValue;
@@ -286,7 +286,7 @@ class HumanPlayer(PlayerSymbol symbol) : IPlayer
 {
     public PlayerSymbol Symbol { get; } = symbol;
 
-    public (int i, int j) GetMove(State state)
+    public (int i, int j) GetBestMove(State state)
     {
         if (state.GetAvailableMoves().Count > 0)
         {
@@ -301,7 +301,7 @@ class HumanPlayer(PlayerSymbol symbol) : IPlayer
             else
             {
                 Console.WriteLine("Invalid move");
-                return GetMove(state);
+                return GetBestMove(state);
             }
         }
 
