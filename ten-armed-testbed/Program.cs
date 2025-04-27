@@ -14,7 +14,7 @@ const int steps = 1000;
 // At the end of all rounds, I'll divide the sum by 2000 to get the average reward for each step.
 
 // To measure 2, I'll keep an array bestArmSelected of length 1000, each element of the array will be the number of times the best arm was selected at that step for each round.
-// At the end of all rounds, I'll compute for each step "i" the percentage of times the best arm was selected up to that step using the following formula:
+// At the end of all rounds, I'll divide the sum by 2000 to get the average reward for each step.
 
 // We define an epsilon-greedy method as a function getting the estimated reward for each arm and returning the index of the arm to be selected.
 // We accept epsilon as a parameter, note that with epsilon=0 we get the greedy strategy. Estimated reward is modeled as a dictionary.
@@ -94,15 +94,7 @@ ExperimentResult RunExperiment(Func<Dictionary<int, double>, int> strategy)
 
     double[] averageRewards = sumOfRewards.Select(i => i / rounds).ToArray();
     double[] bestArmSelectionRate =
-        bestArmSelected.Select(Convert.ToDouble).Select(i => i / rounds).ToArray(); // new double[steps];
-
-    // int total = 0;
-    // for (int i = 0; i < steps; i++)
-    // {
-    //     total += bestArmSelected[i];
-    //
-    //     bestArmSelectionRate[i] = (double)total / (rounds * (i + 1));
-    // }
+        bestArmSelected.Select(Convert.ToDouble).Select(i => i / rounds).ToArray();
 
     return new(averageRewards, bestArmSelectionRate);
 }
