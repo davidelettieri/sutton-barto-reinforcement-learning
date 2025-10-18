@@ -34,7 +34,7 @@ QPlayer TrainQPlayer(int trainingIterations)
     var pO = new QPlayer(PlayerSymbol.O, allStates, 0.5);
 
     Console.WriteLine("Begin training Q players!");
-    for (int i = 0; i < trainingIterations; i++)
+    for (var i = 0; i < trainingIterations; i++)
     {
         Console.WriteLine("Iteration {0}", i);
         var game = new State(new PlayerSymbol?[3, 3]);
@@ -123,7 +123,7 @@ class State(PlayerSymbol?[,] positions) : IEquatable<State>
 
     private bool IsWinner(PlayerSymbol player)
     {
-        for (int i = 0; i < 3; i++)
+        for (var i = 0; i < 3; i++)
         {
             if (Positions[i, 0] == player && Positions[i, 1] == player && Positions[i, 2] == player)
                 return true;
@@ -145,9 +145,9 @@ class State(PlayerSymbol?[,] positions) : IEquatable<State>
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
-        for (int i = 0; i < 3; i++)
+        for (var i = 0; i < 3; i++)
         {
-            for (int j = 0; j < 3; j++)
+            for (var j = 0; j < 3; j++)
             {
                 if (Positions[i, j] != other.Positions[i, j])
                 {
@@ -237,7 +237,7 @@ class QPlayer : IPlayer
     public (int i, int j) GetBestMove(State state)
     {
         (int i, int j)? bestMove = null;
-        double maxValue = double.MinValue;
+        var maxValue = double.MinValue;
         State? selectedNextState = null;
 
         foreach (var move in state.GetAvailableMoves().OrderBy(_ => Random.Shared.NextDouble()))

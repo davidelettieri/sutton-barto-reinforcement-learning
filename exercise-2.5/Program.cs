@@ -24,7 +24,7 @@ ExperimentResult RunExperiment(SelectArmStrategy strategy, UpdateEstimatedReward
     var bestArmSelected = new int[steps];
     var rewardDistributions = new Normal[numberOfArms];
 
-    for (int round = 0; round < rounds; round++)
+    for (var round = 0; round < rounds; round++)
     {
         Console.WriteLine($"Round {round + 1} of {rounds}");
         // All actions values start with zero value
@@ -32,11 +32,11 @@ ExperimentResult RunExperiment(SelectArmStrategy strategy, UpdateEstimatedReward
 
         var arms = InitializeArms(numberOfArms);
 
-        for (int step = 0; step < steps; step++)
+        for (var step = 0; step < steps; step++)
         {
             // The random walk
             (qStarA, var bestArm) = UpdateQStarABestArm(qStarA, normal);
-            for (int i = 0; i < qStarA.Length; i++)
+            for (var i = 0; i < qStarA.Length; i++)
             {
                 rewardDistributions[i] = new Normal(qStarA[i], 1, Random.Shared);
             }
@@ -61,8 +61,8 @@ ExperimentResult RunExperiment(SelectArmStrategy strategy, UpdateEstimatedReward
         }
     }
 
-    double[] averageRewards = sumOfRewards.Select(i => i / rounds).ToArray();
-    double[] bestArmSelectionRate =
+    var averageRewards = sumOfRewards.Select(i => i / rounds).ToArray();
+    var bestArmSelectionRate =
         bestArmSelected.Select(Convert.ToDouble).Select(i => i / rounds).ToArray();
 
     return new(averageRewards, bestArmSelectionRate);
@@ -106,9 +106,9 @@ double GetReward(Normal[] rewardDistributions, int arm) =>
 
 (double[] qStarA, int bestArm) UpdateQStarABestArm(double[] doubles, Normal distribution)
 {
-    int bestArm = -1;
-    double bestValue = double.MinValue;
-    for (int i = 0; i < doubles.Length; i++)
+    var bestArm = -1;
+    var bestValue = double.MinValue;
+    for (var i = 0; i < doubles.Length; i++)
     {
         doubles[i] += distribution.Sample();
 

@@ -33,7 +33,7 @@ public static class Helper
                 throw new ArgumentException("Arms array cannot be empty", nameof(arms));
             }
 
-            for (int i = 0; i < arms.Length; i++)
+            for (var i = 0; i < arms.Length; i++)
             {
                 if (arms[i].SelectedCount == 0)
                 {
@@ -69,7 +69,7 @@ public static class Helper
         var sumOfRewards = new double[steps];
         var bestArmSelected = new int[steps];
 
-        for (int round = 0; round < rounds; round++)
+        for (var round = 0; round < rounds; round++)
         {
             Console.WriteLine($"Round {round + 1} of {rounds}");
             // Action values for each arm are selected using a normal distribution with mean 0 and standard deviation 1.
@@ -83,7 +83,7 @@ public static class Helper
             var arms = InitializeArms(numberOfArms);
             var bestArm = qStarA.Select((v, i) => (v, i)).MaxBy(el => el.v).i;
 
-            for (int step = 0; step < steps; step++)
+            for (var step = 0; step < steps; step++)
             {
                 var selectedArm = strategy(arms, step);
                 var reward = GetReward(rewardDistributions, selectedArm);
@@ -106,8 +106,8 @@ public static class Helper
             }
         }
 
-        double[] averageRewards = sumOfRewards.Select(i => i / rounds).ToArray();
-        double[] bestArmSelectionRate =
+        var averageRewards = sumOfRewards.Select(i => i / rounds).ToArray();
+        var bestArmSelectionRate =
             bestArmSelected.Select(Convert.ToDouble).Select(i => i / rounds).ToArray();
 
         return new(averageRewards, bestArmSelectionRate);
