@@ -2,7 +2,7 @@
 // copyright of the authors, see the link above for details.
 
 const int NumBoxes = 162;
-const int Alpha = 1000;
+const float Alpha = 1000.0f;
 const float Beta = 0.5f;
 const float Gamma = 0.95f;
 const float LambdaW = 0.9f;
@@ -11,8 +11,8 @@ const float LambdaV = 0.8f;
 const int MaxFailures = 100;
 const int MaxSteps = 100000;
 
-float x, x_dot; // position and velocity of the cart
-float theta, theta_dot; // angle and angular velocity of the pole
+float x, xDot; // position and velocity of the cart
+float theta, thetaDot; // angle and angular velocity of the pole
 
 var w = new float[NumBoxes];
 var v = new float[NumBoxes];
@@ -23,8 +23,8 @@ var xBar = new float[NumBoxes];
 float p, oldP, r;
 int steps = 0, failures = 0;
 
-x = x_dot = theta = theta_dot = 0.0f;
-var box = GetBox(x, x_dot, theta, theta_dot);
+x = xDot = theta = thetaDot = 0.0f;
+var box = GetBox(x, xDot, theta, thetaDot);
 
 Console.WriteLine("Starting pole balancing. Select an integer number to seed the random instance:");
 var a = int.Parse(Console.ReadLine() ?? "0");
@@ -39,9 +39,9 @@ while (steps++ < MaxSteps && failures < MaxFailures)
     xBar[box] += (1 - LambdaV);
 
     oldP = v[box];
-    (x, x_dot, theta, theta_dot) = CartPole(y, x, x_dot, theta, theta_dot);
+    (x, xDot, theta, thetaDot) = CartPole(y, x, xDot, theta, thetaDot);
 
-    box = GetBox(x, x_dot, theta, theta_dot);
+    box = GetBox(x, xDot, theta, thetaDot);
 
     if (box < 0)
     {
@@ -49,8 +49,8 @@ while (steps++ < MaxSteps && failures < MaxFailures)
         failures++;
         Console.WriteLine($"Failure {failures} at step {steps}");
         steps = 0;
-        x = x_dot = theta = theta_dot = 0.0f;
-        box = GetBox(x, x_dot, theta, theta_dot);
+        x = xDot = theta = thetaDot = 0.0f;
+        box = GetBox(x, xDot, theta, thetaDot);
 
         r = -1.0f;
         p = 0.0f;
