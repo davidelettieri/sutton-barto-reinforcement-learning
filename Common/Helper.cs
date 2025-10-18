@@ -19,6 +19,11 @@ public static class Helper
     {
         return (arms, step) =>
         {
+            if (arms.Length == 0)
+            {
+                throw new ArgumentException("Arms array cannot be empty", nameof(arms));
+            }
+
             for (int i = 0; i < arms.Length; i++)
             {
                 if (arms[i].SelectedCount == 0)
@@ -28,7 +33,7 @@ public static class Helper
             }
             return arms
                 .Select((arm, index) => (value: arm.EstimatedReward + c * Math.Sqrt(Math.Log(step + 1) / arm.SelectedCount), index))
-                .MaxBy(t => t.value)!
+                .MaxBy(t => t.value)
                 .index;
         };
     }
