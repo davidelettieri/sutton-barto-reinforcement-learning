@@ -8,7 +8,7 @@ public static class Helper
        {
            if (Random.Shared.NextDouble() < epsilon)
            {
-               return Convert.ToInt32(Random.Shared.NextInt64(arms.Length));
+               return Random.Shared.Next(arms.Length);
            }
 
            return arms.MaxBy(p => p.EstimatedReward)!.Index;
