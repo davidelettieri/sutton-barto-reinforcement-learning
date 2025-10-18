@@ -25,7 +25,7 @@ ExperimentResult RunExperiment(SelectArmStrategy strategy, UpdateEstimatedReward
 
         // Each arm reward is based on a normal distribution with mean equal to the action value for that arm and standard deviation 1.
         var rewardDistributions = qStarA
-            .Select(x => new Normal(x, 1, new Random()))
+            .Select(x => new Normal(x, 1, Random.Shared))
             .ToArray();
 
         var arms = InitializeArms(numberOfArms);
