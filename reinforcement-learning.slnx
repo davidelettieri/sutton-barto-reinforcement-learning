@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Common/common.csproj" />
+  <Project Path="exercise-2.5/exercise-2.5.csproj" />
+  <Project Path="ten-armed-testbed/ten-armed-testbed.csproj" />
+  <Project Path="tic-tac-toe/tic-tac-toe.csproj" />
+  <Project Path="ucb/ucb.csproj" />
+</Solution>
