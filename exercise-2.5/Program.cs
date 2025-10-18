@@ -1,5 +1,7 @@
-﻿using MathNet.Numerics.Distributions;
+﻿using Common;
+using MathNet.Numerics.Distributions;
 using ScottPlot;
+using static Common.Helper;
 
 // I want to run "experiments" with 10 arms to evaluate the performance of epsilon-greedy methods.
 // An experiment consists of 2000 rounds, each round consists of 10000 steps.
@@ -7,39 +9,11 @@ const int rounds = 2000;
 const int steps = 10000;
 
 // Please check the ten-armed-testbed project for the simplest example of the k-armed bandit problem.
-
-UpdateEstimatedReward sampleAverage = (currentEstimatedReward, reward, armSelectedCount) =>
-    currentEstimatedReward + (reward - currentEstimatedReward) / armSelectedCount;
-
 UpdateEstimatedReward constantStepSize(double alpha)
     => (currentEstimatedReward, reward, _) =>
         currentEstimatedReward + alpha * (reward - currentEstimatedReward);
 
-Func<Dictionary<int, double>, int> GetEpsilonStrategy(double epsilon)
-    => currentEstimatedRewards =>
-    {
-        if (Random.Shared.NextDouble() < epsilon)
-        {
-            return Convert.ToInt32(Random.Shared.NextInt64(currentEstimatedRewards.Count));
-        }
-
-        return currentEstimatedRewards.MaxBy(p => p.Value).Key;
-    };
-
-// Initialize the estimated reward dictionary.
-Dictionary<int, double> InitializeEstimatedRewards(int numberOfArms)
-{
-    var dictionary = new Dictionary<int, double>();
-    for (int i = 0; i < numberOfArms; i++)
-    {
-        dictionary[i] = 0;
-    }
-
-    return dictionary;
-}
-
-
-ExperimentResult RunExperiment(Func<Dictionary<int, double>, int> strategy, UpdateEstimatedReward updateEstimatedReward)
+ExperimentResult RunExperiment(SelectArmStrategy strategy, UpdateEstimatedReward updateEstimatedReward)
 {
     // Setup: this variable will be used across all rounds.
     // Each arm will be identified by a number between 0 and 9.
@@ -56,10 +30,7 @@ ExperimentResult RunExperiment(Func<Dictionary<int, double>, int> strategy, Upda
         // All actions values start with zero value
         var qStarA = Enumerable.Repeat(0.0, 10).ToArray();
 
-        // The initial estimates of the action values are set to 0.
-        var estimatedRewards = InitializeEstimatedRewards(numberOfArms);
-
-        var pickedArms = new Dictionary<int, int>();
+        var arms = InitializeArms(numberOfArms);
 
         for (int step = 0; step < steps; step++)
         {
@@ -69,16 +40,16 @@ ExperimentResult RunExperiment(Func<Dictionary<int, double>, int> strategy, Upda
             {
                 rewardDistributions[i] = new Normal(qStarA[i], 1, Random.Shared);
             }
-            var selectedArm = strategy(estimatedRewards);
+            var selectedArm = strategy(arms, step);
             var reward = GetReward(rewardDistributions, selectedArm);
-            if (pickedArms.TryGetValue(selectedArm, out var picked))
+            arms[selectedArm] = arms[selectedArm] with
             {
-                picked += 1;
-            }
-            else
-            {
-                picked = 1;
-            }
+                SelectedCount = arms[selectedArm].SelectedCount + 1,
+                EstimatedReward = updateEstimatedReward(
+                    arms[selectedArm].EstimatedReward,
+                    reward,
+                    arms[selectedArm].SelectedCount + 1)
+            };
 
             if (bestArm == selectedArm)
             {
@@ -86,8 +57,6 @@ ExperimentResult RunExperiment(Func<Dictionary<int, double>, int> strategy, Upda
             }
 
             sumOfRewards[step] += reward;
-            pickedArms[selectedArm] = picked;
-            estimatedRewards[selectedArm] = updateEstimatedReward(estimatedRewards[selectedArm], reward, picked);
         }
     }
 
@@ -100,7 +69,7 @@ ExperimentResult RunExperiment(Func<Dictionary<int, double>, int> strategy, Upda
 
 var tenPercentExplorationStrategy = GetEpsilonStrategy(0.1);
 
-var sampleAverageResult = RunExperiment(tenPercentExplorationStrategy, sampleAverage);
+var sampleAverageResult = RunExperiment(tenPercentExplorationStrategy, SampleAverage);
 var constantStepSizeResult = RunExperiment(tenPercentExplorationStrategy, constantStepSize(0.1));
 
 
@@ -151,8 +120,3 @@ double GetReward(Normal[] rewardDistributions, int arm) =>
 
     return (doubles, bestArm);
 }
-
-// I'm defining a delegate to capture the signature of the reward estimate update strategy
-delegate double UpdateEstimatedReward(double currentEstimatedReward, double reward, int armSelectedCount);
-
-record ExperimentResult(double[] AverageRewardsPerStep, double[] BestArmSelectionRate);
