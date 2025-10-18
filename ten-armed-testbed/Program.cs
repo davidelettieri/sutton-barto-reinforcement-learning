@@ -1,6 +1,4 @@
-﻿using Common;
-using MathNet.Numerics.Distributions;
-using ScottPlot;
+﻿using ScottPlot;
 using static Common.Helper;
 
 // I want to run "experiments" with 10 arms to evaluate the performance of epsilon-greedy methods.

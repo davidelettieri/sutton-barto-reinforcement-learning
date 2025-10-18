@@ -8,12 +8,19 @@ public static class Helper
     {
         return (arms, step) =>
        {
+           if (arms.Length == 0)
+           {
+               throw new ArgumentException("Arms array cannot be empty", nameof(arms));
+           }
+
            if (Random.Shared.NextDouble() < epsilon)
            {
                return Random.Shared.Next(arms.Length);
            }
 
-           return arms.MaxBy(p => p.EstimatedReward)!.Index;
+           var maxReward = arms.Max(p => p.EstimatedReward);
+           var bestArms = arms.Where(p => p.EstimatedReward == maxReward).ToArray();
+           return bestArms[Random.Shared.Next(bestArms.Length)].Index;
        };
     }
 
@@ -33,21 +40,21 @@ public static class Helper
                     return i;
                 }
             }
-            return arms
+
+            var ucbValues = arms
                 .Select((arm, index) => (value: arm.EstimatedReward + c * Math.Sqrt(Math.Log(step + 1) / arm.SelectedCount), index))
-                .MaxBy(t => t.value)
-                .index;
+                .ToArray();
+            var maxValue = ucbValues.Max(t => t.value);
+            var bestArms = ucbValues.Where(t => t.value == maxValue).ToArray();
+            return bestArms[Random.Shared.Next(bestArms.Length)].index;
         };
     }
 
     public static Arm[] InitializeArms(int numberOfArms)
     {
-        var arms = new Arm[numberOfArms];
-        for (int i = 0; i < numberOfArms; i++)
-        {
-            arms[i] = new Arm(i, 0, 0);
-        }
-        return arms;
+        return Enumerable.Range(0, numberOfArms)
+            .Select(i => new Arm(i, 0, 0))
+            .ToArray();
     }
 
     public static readonly UpdateEstimatedReward SampleAverage = (currentEstimatedReward, reward, armSelectedCount) =>
