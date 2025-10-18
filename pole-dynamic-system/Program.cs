@@ -20,8 +20,8 @@ float[] e = new float[N_BOXES];
 float[] xBar = new float[N_BOXES];
 
 
-float p, oldP, rHat, r;
-int box, steps = 0, failures = 0, failed;
+float p, oldP, r;
+int steps = 0, failures = 0;
 
 for (var i = 0; i < N_BOXES; i++)
 {
@@ -29,17 +29,98 @@ for (var i = 0; i < N_BOXES; i++)
 }
 
 x = x_dot = theta = theta_dot = 0.0f;
-box = getBox(x, x_dot, theta, theta_dot);
+int box = getBox(x, x_dot, theta, theta_dot);
 
 while (steps++ < MAX_STEPS && failures < MAX_FAILURES)
 {
-    var y =
+    bool failed;
+    var y = Random.Shared.NextSingle() < ProbPushRight(w[box]) ? 1 : 0;
+
+    e[box] += (1 - LAMBDAw) * (y - 0.5f);
+    xBar[box] += (1 - LAMBDAv);
+
+    oldP = v[box];
+    (x, x_dot, theta, theta_dot) = CartPole(y, x, x_dot, theta, theta_dot);
+
+    box = getBox(x, x_dot, theta, theta_dot);
+
+    if (box < 0)
+    {
+        failed = true;
+        failures++;
+        Console.WriteLine($"Failure {failures} at step {steps}");
+        steps = 0;
+        x = x_dot = theta = theta_dot = 0.0f;
+        box = getBox(x, x_dot, theta, theta_dot);
+
+        r = -1.0f;
+        p = 0.0f;
+    }
+    else
+    {
+        failed = false;
+        r = 0.0f;
+        p = v[box];
+    }
+
+    var rHat = r + GAMMA * p - oldP;
+
+    for (var i = 0; i < N_BOXES; i++)
+    {
+        w[i] += ALPHA * rHat * e[i];
+        v[i] += BETA * rHat * xBar[i];
+
+        if (failed)
+        {
+            e[i] = 0.0f;
+            xBar[i] = 0.0f;
+        }
+        else
+        {
+            e[i] *= LAMBDAw;
+            xBar[i] *= LAMBDAv;
+        }
+    }
 }
 
+if (failures == MAX_FAILURES)
+{
+    Console.WriteLine("Pole not balanced. Stopping after {0} failures.", failures);
+}
+else
+{
+    Console.WriteLine("Pole balanced successfully for at least {0} steps", steps);
+}
 
+static (float x, float x_dot, float theta, float theta_dot) CartPole(int action, float x, float x_dot, float theta, float theta_dot)
+{
+    const float gravity = 9.8f;
+    const float masscart = 1.0f;
+    const float masspole = 0.1f;
+    const float total_mass = masspole + masscart;
+    const float length = 0.5f; // actually half the pole's length
+    const float polemass_length = masspole * length;
+    const float force_mag = 10.0f;
+    const float tau = 0.02f; // seconds between state updates
+    const float fourthirds = 4.0f / 3.0f;
 
+    float force = (action == 1) ? force_mag : -force_mag;
+    float costheta = MathF.Cos(theta);
+    float sintheta = MathF.Sin(theta);
+    float temp = (force + polemass_length * theta_dot * theta_dot * sintheta) / total_mass;
+    float thetaacc = (gravity * sintheta - costheta * temp) / (length * (fourthirds - masspole * costheta * costheta / total_mass));
+    float xacc = temp - polemass_length * thetaacc * costheta / total_mass;
+    x += tau * x_dot;
+    x_dot += tau * xacc;
+    theta += tau * theta_dot;
+    theta_dot += tau * thetaacc;
+    return (x, x_dot, theta, theta_dot);
+}
 
-
+static float ProbPushRight(float s)
+{
+    return 1.0f / (1.0f + MathF.Exp(Math.Max(-50.0f, Math.Min(s, 50.0f))));
+}
 
 
 static int getBox(float x, float x_dot, float theta, float theta_dot)
