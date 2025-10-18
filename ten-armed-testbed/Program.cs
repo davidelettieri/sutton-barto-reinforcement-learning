@@ -48,13 +48,14 @@ ExperimentResult RunExperiment(SelectArmStrategy strategy, UpdateEstimatedReward
         {
             var selectedArm = strategy(arms, step);
             var reward = GetReward(rewardDistributions, selectedArm);
+            var newSelectedCount = arms[selectedArm].SelectedCount + 1;
             arms[selectedArm] = arms[selectedArm] with
             {
-                SelectedCount = arms[selectedArm].SelectedCount + 1,
+                SelectedCount = newSelectedCount,
                 EstimatedReward = updateEstimatedReward(
                     arms[selectedArm].EstimatedReward,
                     reward,
-                    arms[selectedArm].SelectedCount + 1)
+                    newSelectedCount)
             };
 
             if (bestArm == selectedArm)
