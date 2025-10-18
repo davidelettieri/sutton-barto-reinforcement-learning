@@ -21,66 +21,13 @@ const int steps = 1000;
 // We define an epsilon-greedy method as a function getting the estimated reward for each arm and returning the index of the arm to be selected.
 // We accept epsilon as a parameter, note that with epsilon=0 we get the greedy strategy. Estimated reward is modeled as a dictionary.
 
-ExperimentResult RunExperiment(SelectArmStrategy strategy, UpdateEstimatedReward updateEstimatedReward)
-{
-    // Setup: this variable will be used across all rounds.
-    // Each arm will be identified by a number between 0 and 9.
-    var numberOfArms = 10;
-    var normal = new Normal(0, 1, Random.Shared);
-    var sumOfRewards = new double[steps];
-    var bestArmSelected = new int[steps];
-
-    for (int round = 0; round < rounds; round++)
-    {
-        Console.WriteLine($"Round {round + 1} of {rounds}");
-        // Action values for each arm are selected using a normal distribution with mean 0 and standard deviation 1.
-        var qStarA = normal.Samples().Take(numberOfArms).ToArray();
-
-        // Each arm reward is based on a normal distribution with mean equal to the action value for that arm and standard deviation 1.
-        var rewardDistributions = qStarA
-            .Select(x => new Normal(x, 1, Random.Shared))
-            .ToArray();
-
-        var arms = InitializeArms(numberOfArms);
-        var bestArm = qStarA.Select((v, i) => (v, i)).MaxBy(el => el.v).i;
-
-        for (int step = 0; step < steps; step++)
-        {
-            var selectedArm = strategy(arms, step);
-            var reward = GetReward(rewardDistributions, selectedArm);
-            var newSelectedCount = arms[selectedArm].SelectedCount + 1;
-            arms[selectedArm] = arms[selectedArm] with
-            {
-                SelectedCount = newSelectedCount,
-                EstimatedReward = updateEstimatedReward(
-                    arms[selectedArm].EstimatedReward,
-                    reward,
-                    newSelectedCount)
-            };
-
-            if (bestArm == selectedArm)
-            {
-                bestArmSelected[step]++;
-            }
-
-            sumOfRewards[step] += reward;
-        }
-    }
-
-    double[] averageRewards = sumOfRewards.Select(i => i / rounds).ToArray();
-    double[] bestArmSelectionRate =
-        bestArmSelected.Select(Convert.ToDouble).Select(i => i / rounds).ToArray();
-
-    return new(averageRewards, bestArmSelectionRate);
-}
-
 var onePercentExplorationStrategy = GetEpsilonStrategy(0.01);
 var tenPercentExplorationStrategy = GetEpsilonStrategy(0.1);
 var greedyStrategy = GetEpsilonStrategy(0);
 
-var tenPercentExperimentResult = RunExperiment(tenPercentExplorationStrategy, SampleAverage);
-var onePercentExperimentResult = RunExperiment(onePercentExplorationStrategy, SampleAverage);
-var greedyExperimentResultExperimentResult = RunExperiment(greedyStrategy, SampleAverage);
+var tenPercentExperimentResult = RunStationaryExperiment(steps, rounds, tenPercentExplorationStrategy, SampleAverage);
+var onePercentExperimentResult = RunStationaryExperiment(steps, rounds, onePercentExplorationStrategy, SampleAverage);
+var greedyExperimentResultExperimentResult = RunStationaryExperiment(steps, rounds, greedyStrategy, SampleAverage);
 
 
 IPalette palette = new ScottPlot.Palettes.Category10();
@@ -114,7 +61,3 @@ var greedyLineBestArmSelection =
 greedyLineBestArmSelection.LegendText = "greedy";
 
 bestArmSelectionRagePlot.SavePng("best_arm_selection_rate.png", 1200, 800);
-
-double GetReward(Normal[] rewardDistributions, int arm) =>
-    rewardDistributions[arm].Sample();
-
