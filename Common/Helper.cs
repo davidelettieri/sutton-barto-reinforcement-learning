@@ -48,7 +48,7 @@ public static class Helper
         return arms;
     }
 
-    public static UpdateEstimatedReward SampleAverage = (currentEstimatedReward, reward, armSelectedCount) =>
+    public static readonly UpdateEstimatedReward SampleAverage = (currentEstimatedReward, reward, armSelectedCount) =>
         currentEstimatedReward + (reward - currentEstimatedReward) / armSelectedCount;
 }
 
