@@ -14,26 +14,26 @@ const int MaxSteps = 100000;
 float x, x_dot; // position and velocity of the cart
 float theta, theta_dot; // angle and angular velocity of the pole
 
-float[] w = new float[NumBoxes];
-float[] v = new float[NumBoxes];
-float[] e = new float[NumBoxes];
-float[] xBar = new float[NumBoxes];
+var w = new float[NumBoxes];
+var v = new float[NumBoxes];
+var e = new float[NumBoxes];
+var xBar = new float[NumBoxes];
 
 
 float p, oldP, r;
 int steps = 0, failures = 0;
 
 x = x_dot = theta = theta_dot = 0.0f;
-int box = getBox(x, x_dot, theta, theta_dot);
+var box = GetBox(x, x_dot, theta, theta_dot);
 
 Console.WriteLine("Starting pole balancing. Select an integer number to seed the random instance:");
-int a = int.Parse(Console.ReadLine() ?? "0");
+var a = int.Parse(Console.ReadLine() ?? "0");
 var rand = new Random(a);
 
 while (steps++ < MaxSteps && failures < MaxFailures)
 {
     bool failed;
-    var y = rand.NextSingle() < probPushRight(w[box]) ? 1 : 0;
+    var y = rand.NextSingle() < ProbPushRight(w[box]) ? 1 : 0;
 
     e[box] += (1 - LambdaW) * (y - 0.5f);
     xBar[box] += (1 - LambdaV);
@@ -41,7 +41,7 @@ while (steps++ < MaxSteps && failures < MaxFailures)
     oldP = v[box];
     (x, x_dot, theta, theta_dot) = CartPole(y, x, x_dot, theta, theta_dot);
 
-    box = getBox(x, x_dot, theta, theta_dot);
+    box = GetBox(x, x_dot, theta, theta_dot);
 
     if (box < 0)
     {
@@ -50,7 +50,7 @@ while (steps++ < MaxSteps && failures < MaxFailures)
         Console.WriteLine($"Failure {failures} at step {steps}");
         steps = 0;
         x = x_dot = theta = theta_dot = 0.0f;
-        box = getBox(x, x_dot, theta, theta_dot);
+        box = GetBox(x, x_dot, theta, theta_dot);
 
         r = -1.0f;
         p = 0.0f;
@@ -103,12 +103,12 @@ static (float x, float x_dot, float theta, float theta_dot) CartPole(int action,
     const float Tau = 0.02f; // seconds between state updates
     const float FourThirds = 4.0f / 3.0f;
 
-    float force = (action == 1) ? ForceMag : -ForceMag;
-    float costheta = MathF.Cos(theta);
-    float sintheta = MathF.Sin(theta);
-    float temp = (force + PoleMassLength * theta_dot * theta_dot * sintheta) / TotalMass;
-    float thetaacc = (Gravity * sintheta - costheta * temp) / (Length * (FourThirds - MassPole * costheta * costheta / TotalMass));
-    float xacc = temp - PoleMassLength * thetaacc * costheta / TotalMass;
+    var force = (action == 1) ? ForceMag : -ForceMag;
+    var costheta = MathF.Cos(theta);
+    var sintheta = MathF.Sin(theta);
+    var temp = (force + PoleMassLength * theta_dot * theta_dot * sintheta) / TotalMass;
+    var thetaacc = (Gravity * sintheta - costheta * temp) / (Length * (FourThirds - MassPole * costheta * costheta / TotalMass));
+    var xacc = temp - PoleMassLength * thetaacc * costheta / TotalMass;
     x += Tau * x_dot;
     x_dot += Tau * xacc;
     theta += Tau * theta_dot;
@@ -116,19 +116,19 @@ static (float x, float x_dot, float theta, float theta_dot) CartPole(int action,
     return (x, x_dot, theta, theta_dot);
 }
 
-static float probPushRight(float s)
+static float ProbPushRight(float s)
 {
     return 1.0f / (1.0f + MathF.Exp(-MathF.Max(-50.0f, MathF.Min(s, 50.0f))));
 }
 
-static int getBox(float x, float x_dot, float theta, float theta_dot)
+static int GetBox(float x, float x_dot, float theta, float theta_dot)
 {
-    const float one_degree = 0.0174532f;
-    const float six_degrees = 0.1047192f;
-    const float twelve_degrees = 0.2094384f;
-    const float fifty_degrees = 0.87266f;
+    const float OneDegree = 0.0174532f;
+    const float SixDegrees = 0.1047192f;
+    const float TwelveDegrees = 0.2094384f;
+    const float FiftyDegrees = 0.87266f;
 
-    if (x < -2.4f || x > 2.4f || theta < -twelve_degrees || theta > twelve_degrees)
+    if (x < -2.4f || x > 2.4f || theta < -TwelveDegrees || theta > TwelveDegrees)
     {
         return -1;
     }
@@ -156,11 +156,11 @@ static int getBox(float x, float x_dot, float theta, float theta_dot)
         box += 3;
     }
 
-    if (theta >= six_degrees)
+    if (theta >= SixDegrees)
     {
         box += 45;
     }
-    else if (theta >= one_degree)
+    else if (theta >= OneDegree)
     {
         box += 36;
     }
@@ -168,20 +168,20 @@ static int getBox(float x, float x_dot, float theta, float theta_dot)
     {
         box += 27;
     }
-    else if (theta >= -one_degree)
+    else if (theta >= -OneDegree)
     {
         box += 18;
     }
-    else if (theta >= -six_degrees)
+    else if (theta >= -SixDegrees)
     {
         box += 9;
     }
 
-    if (theta_dot >= fifty_degrees)
+    if (theta_dot >= FiftyDegrees)
     {
         box += 108;
     }
-    else if (theta_dot >= -fifty_degrees)
+    else if (theta_dot >= -FiftyDegrees)
     {
         box += 54;
     }

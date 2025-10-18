@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
   <Project Path="Common/common.csproj" />
   <Project Path="exercise-2.5/exercise-2.5.csproj" />
   <Project Path="pole-dynamic-system/pole-dynamic-system.csproj" />
