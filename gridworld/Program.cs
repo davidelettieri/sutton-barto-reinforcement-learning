@@ -77,7 +77,7 @@ public sealed class GridWorld
                 var vOld = _v[state];
                 var vNew = valueFunction(state);
                 _v[state] = vNew;
-                delta = Math.Abs(vOld - vNew);
+                delta = Math.Max(delta, Math.Abs(vOld - vNew));
             }
         } while (delta > Tolerance);
 
@@ -112,8 +112,8 @@ public sealed class GridWorld
         return action switch
         {
             Action.North => row <= 0,
-            Action.East => (col + 1) >= _columns,
-            Action.South => (row + 1) >= _rows,
+            Action.East => col + 1 >= _columns,
+            Action.South => row + 1 >= _rows,
             Action.West => col <= 0,
             _ => throw new ArgumentOutOfRangeException(nameof(action), "Invalid action"),
         };
