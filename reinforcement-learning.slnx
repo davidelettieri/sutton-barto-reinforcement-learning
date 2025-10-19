@@ -4,6 +4,7 @@
   </Folder>
   <Project Path="Common/common.csproj" />
   <Project Path="exercise-2.5/exercise-2.5.csproj" />
+  <Project Path="gridworld/gridworld.csproj" Id="63b6826b-fa28-473b-9fdc-5076a6268e97" />
   <Project Path="pole-dynamic-system/pole-dynamic-system.csproj" />
   <Project Path="ten-armed-testbed/ten-armed-testbed.csproj" />
   <Project Path="tic-tac-toe/tic-tac-toe.csproj" />
