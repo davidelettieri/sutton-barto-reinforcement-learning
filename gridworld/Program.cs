@@ -150,25 +150,14 @@ public sealed class GridWorld
     double FullBackup(int state, Action a)
     {
         var nextState = NextState(state, a);
-        double reward;
-
-        if (state == _specialStateA)
+        double reward = state switch
         {
-            reward = 10;
-        }
-        else if (state == _specialStateB)
-        {
-            reward = 5;
-        }
-        // implicitly handles off-grid moves
-        else if (nextState == state)
-        {
-            reward = -1;
-        }
-        else
-        {
-            reward = 0;
-        }
+            _ when state == _specialStateA => 10,
+            _ when state == _specialStateB => 5,
+            // implicitly handles off-grid moves
+            _ when nextState == state => -1,
+            _ => 0
+        };
 
         return reward + (_gamma * _v[nextState]);
     }
