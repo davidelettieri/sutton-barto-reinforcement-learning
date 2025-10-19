@@ -32,10 +32,10 @@ public sealed class GridWorld
     private readonly int _states;
     private readonly double[,] _stateValues;
     private readonly double[] _v;
-    private readonly int _aa;
-    private readonly int _bb;
-    private readonly int _aaPrime;
-    private readonly int _bbPrime;
+    private readonly int _specialStateA;
+    private readonly int _specialStateB;
+    private readonly int _specialStateAPrime;
+    private readonly int _specialStateBPrime;
 
     public GridWorld(int rows, int columns, double gamma)
     {
@@ -46,10 +46,10 @@ public sealed class GridWorld
         _stateValues = new double[rows, columns];
         _v = new double[_states];
 
-        _aa = StateFromCoordinates(0, 1);
-        _bb = StateFromCoordinates(0, 3);
-        _aaPrime = StateFromCoordinates(4, 1);
-        _bbPrime = StateFromCoordinates(2, 3);
+        _specialStateA = StateFromCoordinates(0, 1);
+        _specialStateB = StateFromCoordinates(0, 3);
+        _specialStateAPrime = StateFromCoordinates(4, 1);
+        _specialStateBPrime = StateFromCoordinates(2, 3);
     }
 
     /// <summary>
@@ -91,20 +91,14 @@ public sealed class GridWorld
     }
 
     private double ValueFunction(int state)
-    {
-        var vNew = Enum.GetValues<Action>()
+        => Enum.GetValues<Action>()
             .Select(a => FullBackup(state, a))
             .Average();
-        return vNew;
-    }
 
     private double OptimalValueFunction(int state)
-    {
-        var vNew = Enum.GetValues<Action>()
+        => Enum.GetValues<Action>()
             .Select(a => FullBackup(state, a))
             .Max();
-        return vNew;
-    }
 
     int StateFromCoordinates(int row, int col)
         => col + (row * _columns);
@@ -142,8 +136,8 @@ public sealed class GridWorld
     {
         var (r, nextState) = (state, a) switch
         {
-            var (s, _) when s == _aa => (10.0, aaprime: _aaPrime),
-            var (s, _) when s == _bb => (5.0, bbprime: _bbPrime),
+            var (s, _) when s == _specialStateA => (10.0, _specialStateAPrime),
+            var (s, _) when s == _specialStateB => (5.0, _specialStateBPrime),
             var (s, act) when OffGrid(s, act) => (-1.0, s),
             _ => (0.0, NextState(state, a))
         };
