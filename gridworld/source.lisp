@@ -1,4 +1,10 @@
 ;;ref: http://incompleteideas.net/book/code/gridworld5x5.lisp
+;; to execute in SBCL:
+;; (load "source.lisp")
+;; (setup)
+;; (compute-V)  for policy evaluation
+;; OR
+;; (compute-V*) for finding optimal value function
 
 (defvar V)
 (defvar VV)
@@ -98,6 +104,7 @@
 (defun xy-from-state (state)
   (truncate state columns))
 
+;; using SBCL and loading the original code, it gives an error that mean is undefined. So adding this definition of mean here.
 (defun mean (numbers)
   "Return the arithmetic mean of a list of numbers."
   (if (null numbers)
