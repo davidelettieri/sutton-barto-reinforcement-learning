@@ -17,14 +17,14 @@ void ComputeV()
     do
     {
         delta = 0.0;
-        for (int x = 0; x < states; x++)
+        for (int state = 0; state < states; state++)
         {
-            double vOld = v[x];
+            double vOld = v[state];
             double vNew = Enum.GetValues<Action>()
-                .Select(a => FullBackup(x, a))
+                .Select(a => FullBackup(state, a))
                 .Average();
-            v[x] = vNew;
-            delta = Math.Abs(vOld - v[x]);
+            v[state] = vNew;
+            delta = Math.Abs(vOld - v[state]);
         }
     } while (delta > 1e-6);
 
@@ -51,14 +51,14 @@ void ComputeVStar()
     do
     {
         delta = 0.0;
-        for (int x = 0; x < states; x++)
+        for (int state = 0; state < states; state++)
         {
-            double vOld = v[x];
+            double vOld = v[state];
             double vNew = Enum.GetValues<Action>()
-                .Select(a => FullBackup(x, a))
+                .Select(a => FullBackup(state, a))
                 .Max();
-            v[x] = vNew;
-            delta = Math.Abs(vOld - v[x]);
+            v[state] = vNew;
+            delta = Math.Abs(vOld - v[state]);
         }
     } while (delta > 1e-6);
 
