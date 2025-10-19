@@ -2,10 +2,10 @@
 const int Columns = 5;
 const double Gamma = 0.9;
 var states = Rows * Columns;
-var aa = StateFromCoordinates(1, 0);
-var bb = StateFromCoordinates(3, 0);
-var aaprime = StateFromCoordinates(1, 4);
-var bbprime = StateFromCoordinates(3, 2);
+var aa = StateFromCoordinates(0, 1);
+var bb = StateFromCoordinates(0, 3);
+var aaprime = StateFromCoordinates(4, 1);
+var bbprime = StateFromCoordinates(2, 3);
 var v = new double[states];
 var vv = new double[Rows, Columns];
 
@@ -17,10 +17,10 @@ void ComputeV()
     do
     {
         delta = 0.0;
-        for (int state = 0; state < states; state++)
+        for (var state = 0; state < states; state++)
         {
-            double vOld = v[state];
-            double vNew = Enum.GetValues<Action>()
+            var vOld = v[state];
+            var vNew = Enum.GetValues<Action>()
                 .Select(a => FullBackup(state, a))
                 .Average();
             v[state] = vNew;
@@ -28,19 +28,20 @@ void ComputeV()
         }
     } while (delta > 1e-6);
 
-    for (int state = 0; state < states; state++)
+    for (var state = 0; state < states; state++)
     {
         var (x, y) = CoordinatesFromState(state);
         vv[x, y] = v[state];
     }
-
+    
     Console.WriteLine("Value Function V(s):");
-    for (int i = 0; i < Rows; i++)
+    for (var i = 0; i < Rows; i++)
     {
-        for (int j = 0; j < Columns; j++)
+        for (var j = 0; j < Columns; j++)
         {
             Console.Write($"{vv[i, j],6:F2} ");
         }
+
         Console.WriteLine();
     }
 }
@@ -51,10 +52,10 @@ void ComputeVStar()
     do
     {
         delta = 0.0;
-        for (int state = 0; state < states; state++)
+        for (var state = 0; state < states; state++)
         {
-            double vOld = v[state];
-            double vNew = Enum.GetValues<Action>()
+            var vOld = v[state];
+            var vNew = Enum.GetValues<Action>()
                 .Select(a => FullBackup(state, a))
                 .Max();
             v[state] = vNew;
@@ -62,16 +63,16 @@ void ComputeVStar()
         }
     } while (delta > 1e-6);
 
-    for (int state = 0; state < states; state++)
+    for (var state = 0; state < states; state++)
     {
         var (x, y) = CoordinatesFromState(state);
         vv[x, y] = v[state];
     }
 
     Console.WriteLine("Value Function V(s):");
-    for (int i = 0; i < Rows; i++)
+    for (var i = 0; i < Rows; i++)
     {
-        for (int j = 0; j < Columns; j++)
+        for (var j = 0; j < Columns; j++)
         {
             Console.Write($"{vv[i, j],6:F2} ");
         }
@@ -109,40 +110,40 @@ double FullBackup(int state, Action a)
 
 static bool OffGrid(int state, Action action)
 {
-    var (x, y) = CoordinatesFromState(state);
+    var (row, col) = CoordinatesFromState(state);
     return action switch
     {
-        Action.North => (y + 1) >= Rows,
-        Action.East => (x + 1) >= Columns,
-        Action.South => y <= 0,
-        Action.West => x <= 0,
+        Action.North => row <= 0,
+        Action.East => (col + 1) >= Columns,
+        Action.South => (row + 1) >= Rows,
+        Action.West => col <= 0,
         _ => throw new ArgumentOutOfRangeException(nameof(action), "Invalid action"),
     };
 }
 
 static int NextState(int state, Action action)
 {
-    var (x, y) = CoordinatesFromState(state);
+    var (row, col) = CoordinatesFromState(state);
     return action switch
     {
-        Action.North => StateFromCoordinates(x, y + 1),
-        Action.East => StateFromCoordinates(x + 1, y),
-        Action.South => StateFromCoordinates(x, y - 1),
-        Action.West => StateFromCoordinates(x - 1, y),
+        Action.East => StateFromCoordinates(row, col + 1),
+        Action.South => StateFromCoordinates(row + 1, col),
+        Action.West => StateFromCoordinates(row, col - 1),
+        Action.North => StateFromCoordinates(row - 1, col),
         _ => throw new ArgumentOutOfRangeException(nameof(action), "Invalid action"),
     };
 }
 
-static int StateFromCoordinates(int x, int y)
-    => y + (x * Columns);
+static int StateFromCoordinates(int row, int col)
+    => col + (row * Columns);
 
-static (int x, int y) CoordinatesFromState(int state)
+static (int row, int col) CoordinatesFromState(int state)
     => (state / Columns, state % Columns);
 
 enum Action
 {
-    North = 0,
+    South = 0,
     East = 1,
-    South = 2,
+    North = 2,
     West = 3
 }

@@ -1,4 +1,4 @@
-// ref: http://incompleteideas.net/book/code/gridworld5x5.lisp
+;;ref: http://incompleteideas.net/book/code/gridworld5x5.lisp
 
 (defvar V)
 (defvar VV)
