@@ -1,144 +1,156 @@
-﻿const int Rows = 5;
-const int Columns = 5;
-const double Gamma = 0.9;
-var states = Rows * Columns;
-var aa = StateFromCoordinates(0, 1);
-var bb = StateFromCoordinates(0, 3);
-var aaprime = StateFromCoordinates(4, 1);
-var bbprime = StateFromCoordinates(2, 3);
-var v = new double[states];
-var vv = new double[Rows, Columns];
+﻿var rows = 5;
+var columns = 5;
+var gw = new GridWorld(rows, columns, 0.9);
+var stateValues = gw.ComputeStateValuesFunction();
+Console.WriteLine("Value Function V(s):");
+PrintMatrix(stateValues);
 
-ComputeV();
+gw = new GridWorld(rows, columns, 0.9);
+var optimalStateValues = gw.ComputeStateValuesFunctionWithOptimalPolicy();
+Console.WriteLine("Optimal Value Function V(s):");
+PrintMatrix(optimalStateValues);
 
-void ComputeV()
+void PrintMatrix(double[,] doubles)
 {
-    double delta;
-    do
+    for (var i = 0; i < rows; i++)
     {
-        delta = 0.0;
-        for (var state = 0; state < states; state++)
+        for (var j = 0; j < columns; j++)
         {
-            var vOld = v[state];
-            var vNew = Enum.GetValues<Action>()
-                .Select(a => FullBackup(state, a))
-                .Average();
-            v[state] = vNew;
-            delta = Math.Abs(vOld - v[state]);
-        }
-    } while (delta > 1e-6);
-
-    for (var state = 0; state < states; state++)
-    {
-        var (x, y) = CoordinatesFromState(state);
-        vv[x, y] = v[state];
-    }
-    
-    Console.WriteLine("Value Function V(s):");
-    for (var i = 0; i < Rows; i++)
-    {
-        for (var j = 0; j < Columns; j++)
-        {
-            Console.Write($"{vv[i, j],6:F2} ");
+            Console.Write($"{doubles[i, j],6:F1} ");
         }
 
         Console.WriteLine();
     }
 }
 
-void ComputeVStar()
+public sealed class GridWorld
 {
-    double delta;
-    do
+    private const double Tolerance = 1e-6;
+    private readonly int _rows;
+    private readonly int _columns;
+    private readonly double _gamma;
+    private readonly int _states;
+    private readonly double[,] _stateValues;
+    private readonly double[] _v;
+    private readonly int _aa;
+    private readonly int _bb;
+    private readonly int _aaPrime;
+    private readonly int _bbPrime;
+
+    public GridWorld(int rows, int columns, double gamma)
     {
-        delta = 0.0;
-        for (var state = 0; state < states; state++)
+        _rows = rows;
+        _columns = columns;
+        _gamma = gamma;
+        _states = rows * columns;
+        _stateValues = new double[rows, columns];
+        _v = new double[_states];
+
+        _aa = StateFromCoordinates(0, 1);
+        _bb = StateFromCoordinates(0, 3);
+        _aaPrime = StateFromCoordinates(4, 1);
+        _bbPrime = StateFromCoordinates(2, 3);
+    }
+
+    /// <summary>
+    /// Corresponds to compute-V function in Sutton & Barto lisp code
+    /// </summary>
+    /// <returns>State value function as a matrix</returns>
+    public double[,] ComputeStateValuesFunction()
+        => Compute(ValueFunction);
+
+    /// <summary>
+    /// Corresponds to compute-V* function in Sutton & Barto lisp code
+    /// </summary>
+    /// <returns>State value function as a matrix</returns>
+    public double[,] ComputeStateValuesFunctionWithOptimalPolicy()
+        => Compute(OptimalValueFunction);
+
+    private double[,] Compute(Func<int, double> valueFunction)
+    {
+        double delta;
+        do
         {
-            var vOld = v[state];
-            var vNew = Enum.GetValues<Action>()
-                .Select(a => FullBackup(state, a))
-                .Max();
-            v[state] = vNew;
-            delta = Math.Abs(vOld - v[state]);
-        }
-    } while (delta > 1e-6);
+            delta = 0.0;
+            for (var state = 0; state < _states; state++)
+            {
+                var vOld = _v[state];
+                var vNew = valueFunction(state);
+                _v[state] = vNew;
+                delta = Math.Abs(vOld - vNew);
+            }
+        } while (delta > Tolerance);
 
-    for (var state = 0; state < states; state++)
-    {
-        var (x, y) = CoordinatesFromState(state);
-        vv[x, y] = v[state];
-    }
-
-    Console.WriteLine("Value Function V(s):");
-    for (var i = 0; i < Rows; i++)
-    {
-        for (var j = 0; j < Columns; j++)
+        for (var state = 0; state < _states; state++)
         {
-            Console.Write($"{vv[i, j],6:F2} ");
+            var (x, y) = CoordinatesFromState(state);
+            _stateValues[x, y] = _v[state];
         }
+
+        return _stateValues;
+    }
+
+    private double ValueFunction(int state)
+    {
+        var vNew = Enum.GetValues<Action>()
+            .Select(a => FullBackup(state, a))
+            .Average();
+        return vNew;
+    }
+
+    private double OptimalValueFunction(int state)
+    {
+        var vNew = Enum.GetValues<Action>()
+            .Select(a => FullBackup(state, a))
+            .Max();
+        return vNew;
+    }
+
+    int StateFromCoordinates(int row, int col)
+        => col + (row * _columns);
+
+    (int row, int col) CoordinatesFromState(int state)
+        => (state / _columns, state % _columns);
+
+    bool OffGrid(int state, Action action)
+    {
+        var (row, col) = CoordinatesFromState(state);
+        return action switch
+        {
+            Action.North => row <= 0,
+            Action.East => (col + 1) >= _columns,
+            Action.South => (row + 1) >= _rows,
+            Action.West => col <= 0,
+            _ => throw new ArgumentOutOfRangeException(nameof(action), "Invalid action"),
+        };
+    }
+
+    int NextState(int state, Action action)
+    {
+        var (row, col) = CoordinatesFromState(state);
+        return action switch
+        {
+            Action.East => StateFromCoordinates(row, col + 1),
+            Action.South => StateFromCoordinates(row + 1, col),
+            Action.West => StateFromCoordinates(row, col - 1),
+            Action.North => StateFromCoordinates(row - 1, col),
+            _ => throw new ArgumentOutOfRangeException(nameof(action), "Invalid action"),
+        };
+    }
+
+    double FullBackup(int state, Action a)
+    {
+        var (r, nextState) = (state, a) switch
+        {
+            var (s, _) when s == _aa => (10.0, aaprime: _aaPrime),
+            var (s, _) when s == _bb => (5.0, bbprime: _bbPrime),
+            var (s, act) when OffGrid(s, act) => (-1.0, s),
+            _ => (0.0, NextState(state, a))
+        };
+
+        return r + (_gamma * _v[nextState]);
     }
 }
-
-double FullBackup(int state, Action a)
-{
-    double r;
-    int nextState;
-
-    if (state == aa)
-    {
-        r = 10.0;
-        nextState = aaprime;
-    }
-    else if (state == bb)
-    {
-        r = 5.0;
-        nextState = bbprime;
-    }
-    else if (OffGrid(state, a))
-    {
-        r = -1.0;
-        nextState = state;
-    }
-    else
-    {
-        r = 0.0;
-        nextState = NextState(state, a);
-    }
-
-    return r + (Gamma * v[nextState]);
-}
-
-static bool OffGrid(int state, Action action)
-{
-    var (row, col) = CoordinatesFromState(state);
-    return action switch
-    {
-        Action.North => row <= 0,
-        Action.East => (col + 1) >= Columns,
-        Action.South => (row + 1) >= Rows,
-        Action.West => col <= 0,
-        _ => throw new ArgumentOutOfRangeException(nameof(action), "Invalid action"),
-    };
-}
-
-static int NextState(int state, Action action)
-{
-    var (row, col) = CoordinatesFromState(state);
-    return action switch
-    {
-        Action.East => StateFromCoordinates(row, col + 1),
-        Action.South => StateFromCoordinates(row + 1, col),
-        Action.West => StateFromCoordinates(row, col - 1),
-        Action.North => StateFromCoordinates(row - 1, col),
-        _ => throw new ArgumentOutOfRangeException(nameof(action), "Invalid action"),
-    };
-}
-
-static int StateFromCoordinates(int row, int col)
-    => col + (row * Columns);
-
-static (int row, int col) CoordinatesFromState(int state)
-    => (state / Columns, state % Columns);
 
 enum Action
 {
