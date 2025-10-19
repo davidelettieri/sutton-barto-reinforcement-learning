@@ -121,6 +121,21 @@ public sealed class GridWorld
 
     int NextState(int state, Action action)
     {
+        if (state == _specialStateA)
+        {
+            return _specialStateAPrime;
+        }
+
+        if (state == _specialStateB)
+        {
+            return _specialStateBPrime;
+        }
+
+        if (OffGrid(state, action))
+        {
+            return state;
+        }
+
         var (row, col) = CoordinatesFromState(state);
         return action switch
         {
@@ -134,15 +149,17 @@ public sealed class GridWorld
 
     double FullBackup(int state, Action a)
     {
-        var (r, nextState) = (state, a) switch
+        var nextState = NextState(state, a);
+        double reward = state switch
         {
-            var (s, _) when s == _specialStateA => (10.0, _specialStateAPrime),
-            var (s, _) when s == _specialStateB => (5.0, _specialStateBPrime),
-            var (s, act) when OffGrid(s, act) => (-1.0, s),
-            _ => (0.0, NextState(state, a))
+            _ when state == _specialStateA => 10,
+            _ when state == _specialStateB => 5,
+            // implicitly handles off-grid moves
+            _ when nextState == state => -1,
+            _ => 0
         };
 
-        return r + (_gamma * _v[nextState]);
+        return reward + (_gamma * _v[nextState]);
     }
 }
 
